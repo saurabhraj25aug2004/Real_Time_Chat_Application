@@ -1,0 +1,40 @@
+import Chat from '../models/Chat.js';
+import User from '../models/User.js';
+export const createGroupChat = async (req, res) => {
+  const { name, users } = req.body;
+  if (!name || !users) return res.status(400).json({ message: 'Name & users required' });
+
+  const groupChat = await Chat.create({
+    chatName: name,
+    users: [...users, req.user._id],
+    isGroupChat: true,
+    groupAdmin: req.user._id
+  });
+
+  const fullChat = await Chat.findById(groupChat._id).populate('users', '-password').populate('groupAdmin', '-password');
+  res.status(201).json(fullChat);
+};
+
+export const fetchChats = async (req, res) => {
+  const chats = await Chat.find({ users: { $in: [req.user._id] } })
+    .populate('users', '-password')
+    .populate('groupAdmin', '-password')
+    .sort({ updatedAt: -1 });
+  res.json(chats);
+};
+
+export const deleteChat = async (req, res) => {
+  try {
+    const chat = await Chat.findById(req.params.chatId);
+
+    if (!chat) {
+      return res.status(404).json({ message: "Chat not found" });
+    }
+
+    await chat.remove(); // or use: await Chat.findByIdAndDelete(req.params.chatId);
+    return res.status(200).json({ message: "Chat deleted successfully" });
+  } catch (error) {
+    console.error("Error deleting chat:", error);
+    res.status(500).json({ message: "Internal Server Error" });
+  }
+};
