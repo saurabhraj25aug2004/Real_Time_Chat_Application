@@ -107,7 +107,8 @@ const Sidebar = () => {
                     if (!confirmDelete) return;
 
                     try {
-                      const { data } = await axios.delete(`/api/chat/group/${chat._id}`);
+                      const { data } = await axios.delete(`/api/chat/${chat._id}`);
+
                       if (data.success) {
                         toast.success("Group deleted");
                         setChats(prev => prev.filter(c => c._id !== chat._id));
